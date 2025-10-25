@@ -1,0 +1,119 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+h1 {
+    color: #1a73e8;
+}
+
+#controls {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 12px 25px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#recordButton {
+    background-color: #28a745;
+    color: white;
+}
+
+#recordButton:hover:enabled {
+    background-color: #218838;
+}
+
+#stopButton {
+    background-color: #dc3545;
+    color: white;
+}
+
+#stopButton:hover:enabled {
+    background-color: #c82333;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#statusMessage {
+    text-align: center;
+    font-style: italic;
+    margin-bottom: 20px;
+    color: #6c757d;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: #ccc;
+    margin: 30px 0;
+}
+
+#dashboard {
+    margin-top: 30px;
+}
+
+#resultContainer {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.category-box {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-box h3 {
+    margin-top: 0;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    color: #1a73e8;
+}
+
+#kognitif h3 { color: #007bff; }
+#afektif h3 { color: #ffc107; }
+#psikomotorik h3 { color: #20c997; }
+
+.result-content {
+    min-height: 100px;
+    white-space: pre-wrap;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+#fullTranscript {
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#resultText {
+    font-style: italic;
+    color: #555;
+}

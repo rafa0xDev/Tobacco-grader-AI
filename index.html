@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGrader AI - Penilaian Guru</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>VoiceGrader AI</h1>
+        <p>Asisten Penilaian Otomatis Berbasis Suara</p>
+    </header>
+
+    <section id="controls">
+        <button id="recordButton">🎤 MULAI REKAM PENILAIAN</button>
+        <button id="stopButton" disabled>⏸ BERHENTI MEREKAM</button>
+    </section>
+    
+    <div id="statusMessage">Siap mendengarkan</div>
+
+    <hr>
+
+    <section id="dashboard">
+        <h2>Dashboard Hasil Penilaian</h2>
+        <div id="resultContainer">
+            <div class="category-box" id="kognitif">
+                <h3>🧠 KOGNITIF (Pengetahuan)</h3>
+                <div class="result-content"></div>
+            </div>
+            <div class="category-box" id="afektif">
+                <h3>❤️ AFEKTIF (Sikap)</h3>
+                <div class="result-content"></div>
+            </div>
+            <div class="category-box" id="psikomotorik">
+                <h3>✋ PSIKOMOTORIK (Keterampilan)</h3>
+                <div class="result-content"></div>
+            </div>
+        </div>
+    </section>
+    
+    <div id="fullTranscript" style="margin-top: 30px;">
+        <h3>Transkrip Penuh:</h3>
+        <p id="resultText"></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
