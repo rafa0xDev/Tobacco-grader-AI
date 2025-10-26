@@ -125,6 +125,30 @@ button:disabled {
   transform: none;
 }
 
+#saveButton {
+    background: rgba(255, 255, 0, 0.1); /* Warna Kuning / Emas */
+    color: #ffcc00;
+    border-color: rgba(255, 255, 0, 0.3);
+}
+
+#loadButton {
+    background: rgba(60, 140, 255, 0.1); /* Warna Biru */
+    color: #60a0ff;
+    border-color: rgba(60, 140, 255, 0.3);
+}
+
+#saveButton:hover:not(:disabled),
+#loadButton:hover:not(:disabled) {
+    background: rgba(255, 255, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(255, 255, 0, 0.25);
+}
+
+#loadButton:hover:not(:disabled) {
+    background: rgba(60, 140, 255, 0.2);
+    box-shadow: 0 6px 18px rgba(60, 140, 255, 0.25);
+}
+
 /* === Status Message === */
 #statusMessage {
   text-align: center;
