@@ -1,6 +1,6 @@
 const recordButton = document.getElementById('recordButton');
 const stopButton = document.getElementById('stopButton');
-// Dapatkan referensi tombol Simpan dan Muat yang baru
+
 const saveButton = document.getElementById('saveButton');
 const loadButton = document.getElementById('loadButton');
 
@@ -15,18 +15,18 @@ let recognition;
 let finalTranscript = '';
 let isRecording = false;
 
-// --- FUNGSI BARU: SIMPAN DATA KE LOCAL STORAGE ---
+// --- FUNGSI BARU: SIMPAN DATA KE LOCAL STORAGE (Tugas 1) ---
 function saveDataToLocalStorage() {
     const data = {
         timestamp: new Date().toLocaleString('id-ID'),
         fullTranscript: resultText.innerText,
-        kognitif: kognitifList.innerHTML,
+        // Menyimpan isi HTML dari list, bukan lagi hanya data mentah
+        kognitif: kognitifList.innerHTML, 
         afektif: afektifList.innerHTML,
         psikomotorik: psikomotorikList.innerHTML
     };
     
     try {
-        // Menyimpan data sebagai string JSON
         localStorage.setItem('voiceGraderData', JSON.stringify(data));
         statusMessage.innerText = '✅ Data Penilaian berhasil disimpan!';
     } catch (e) {
@@ -35,7 +35,7 @@ function saveDataToLocalStorage() {
     }
 }
 
-// --- FUNGSI BARU: MUAT DATA DARI LOCAL STORAGE ---
+// --- FUNGSI BARU: MUAT DATA DARI LOCAL STORAGE (Tugas 1) ---
 function loadDataFromLocalStorage() {
     try {
         const storedData = localStorage.getItem('voiceGraderData');
@@ -104,7 +104,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
             if (event.results[i].isFinal) {
                 finalTranscript += transcript + ' ';
-                processTranscript(transcript);
+                // Panggil proses klasifikasi setiap kali kalimat selesai (isFinal=true)
+                processTranscript(transcript); 
             } else {
                 interimTranscript = transcript;
             }
@@ -120,7 +121,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         stopRecordingCleanup();
     };
 
-    // === Recognition Berhenti ===
+    // === Recognition Berhenti (Fix Stabilitas) ===
     recognition.onend = () => {
         console.log('Recognition ended.');
         if (isRecording) {
@@ -146,40 +147,66 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     stopButton.disabled = true;
 }
 
-// --- REGEX UNTUK KATEGORI ---
-const kognitifRegex = /\b(analisis|menghitung|konsep|memahami|menjawab|logika|pengetahuan)\b/i;
-const afektifRegex = /\b(disiplin|kerjasama|tanggung jawab|tanggungjawab|sopan|inisiatif|toleransi|sikap)\b/i;
-const psikomotorikRegex = /\b(praktik|menyusun|gerakan|melakukan|membuat|keterampilan|fisik|demonstrasi)\b/i;
+// --- REGEX UNTUK KATEGORI (Ditambahkan flag 'g' untuk pencarian global) ---
+const kognitifRegex = /\b(analisis|menghitung|konsep|memahami|menjawab|logika|pengetahuan)\b/ig;
+const afektifRegex = /\b(disiplin|kerjasama|tanggung jawab|tanggungjawab|sopan|inisiatif|toleransi|sikap)\b/ig;
+const psikomotorikRegex = /\b(praktik|menyusun|gerakan|melakukan|membuat|keterampilan|fisik|demonstrasi)\b/ig;
 
-// --- KLASIFIKASI ---
+
+// --- FUNGSI BANTUAN UNTUK MENAMBAHKAN KOMENTAR (BARU) ---
+function appendComment(listElement, commentsArray) {
+    if (commentsArray.length === 0) return;
+    
+    // 1. Cek dan Hapus Placeholder ('Belum ada komentar')
+    if (listElement.innerHTML.includes('Belum ada')) {
+        listElement.innerHTML = '';
+    }
+    
+    // 2. Tambahkan setiap kata kunci yang terdeteksi
+    commentsArray.forEach(keyword => {
+        // Hanya tambahkan kata kunci yang belum ada di list untuk menghindari duplikasi
+        const itemHtml = `<li>Kata Kunci: <b>${keyword}</b></li>`;
+        if (!listElement.innerHTML.includes(keyword)) {
+             listElement.innerHTML += itemHtml;
+        }
+    });
+}
+
+
+// --- KLASIFIKASI BARU: MENGAMBIL KATA KUNCI SAJA ---
 function processTranscript(text) {
     const lowerText = text.toLowerCase();
-    let classified = false;
+    
+    let kognitifKeywords = [];
+    let afektifKeywords = [];
+    let psikomotorikKeywords = [];
+    
+    let match;
 
-    // Fungsi bantuan untuk menambahkan list item dan menghapus placeholder
-    const appendComment = (listElement, commentText) => {
-        if (listElement.innerHTML.includes('Belum ada')) {
-            listElement.innerHTML = '';
-        }
-        listElement.innerHTML += `<li>${commentText}</li>`;
-    };
-
-    if (kognitifRegex.test(lowerText)) {
-        appendComment(kognitifList, text);
-        classified = true;
+    // A. EKSTRAKSI KATA KUNCI KOGNITIF (menggunakan exec() dengan flag 'g')
+    while ((match = kognitifRegex.exec(lowerText)) !== null) {
+        kognitifKeywords.push(match[0]);
     }
 
-    if (afektifRegex.test(lowerText)) {
-        appendComment(afektifList, text);
-        classified = true;
+    // B. EKSTRAKSI KATA KUNCI AFEKTIF
+    while ((match = afektifRegex.exec(lowerText)) !== null) {
+        afektifKeywords.push(match[0]);
     }
-
-    if (psikomotorikRegex.test(lowerText)) {
-        appendComment(psikomotorikList, text);
-        classified = true;
+    
+    // C. EKSTRAKSI KATA KUNCI PSIKOMOTORIK
+    while ((match = psikomotorikRegex.exec(lowerText)) !== null) {
+        psikomotorikKeywords.push(match[0]);
     }
-
-    if (!classified) console.log(`Tidak terklasifikasi: "${text}"`);
+    
+    // D. UPDATE DASHBOARD
+    appendComment(kognitifList, kognitifKeywords);
+    appendComment(afektifList, afektifKeywords);
+    appendComment(psikomotorikList, psikomotorikKeywords);
+    
+    // Logika jika tidak ada kata kunci sama sekali (opsional)
+    if (kognitifKeywords.length === 0 && afektifKeywords.length === 0 && psikomotorikKeywords.length === 0) {
+        console.log(`[NON-KLASIFIKASI] Kalimat tidak mengandung kata kunci K-A-P: "${text}"`);
+    }
 }
 
 // --- EVENT TOMBOL ---
