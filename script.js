@@ -1,6 +1,5 @@
 const recordButton = document.getElementById('recordButton');
 const stopButton = document.getElementById('stopButton');
-
 const saveButton = document.getElementById('saveButton');
 const loadButton = document.getElementById('loadButton');
 
@@ -20,7 +19,6 @@ function saveDataToLocalStorage() {
     const data = {
         timestamp: new Date().toLocaleString('id-ID'),
         fullTranscript: resultText.innerText,
-        // Menyimpan isi HTML dari list, bukan lagi hanya data mentah
         kognitif: kognitifList.innerHTML, 
         afektif: afektifList.innerHTML,
         psikomotorik: psikomotorikList.innerHTML
@@ -78,18 +76,20 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         resultText.innerText = 'Belum ada hasil rekaman.';
     }
 
-    // === Fungsi reset tombol ===
+    // === Fungsi reset tombol (Fix Tombol & Tugas 3) ===
     function stopRecordingCleanup() {
         isRecording = false;
         recordButton.disabled = false;
         stopButton.disabled = true;
+        recordButton.classList.remove('recording'); // Hapus class saat selesai
     }
 
-    // === Event Recognition Mulai ===
+    // === Event Recognition Mulai (Tugas 3) ===
     recognition.onstart = () => {
         isRecording = true;
         recordButton.disabled = true;
         stopButton.disabled = false;
+        recordButton.classList.add('recording'); // Tambah class saat mulai
         statusMessage.innerText = '🎤 Sedang mendengarkan...';
         resultText.innerText = '';
         finalTranscript = '';
@@ -104,8 +104,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
             if (event.results[i].isFinal) {
                 finalTranscript += transcript + ' ';
-                // Panggil proses klasifikasi setiap kali kalimat selesai (isFinal=true)
-                processTranscript(transcript); 
+                processTranscript(transcript);
             } else {
                 interimTranscript = transcript;
             }
@@ -147,24 +146,21 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     stopButton.disabled = true;
 }
 
-// --- REGEX UNTUK KATEGORI (Ditambahkan flag 'g' untuk pencarian global) ---
+// --- REGEX UNTUK KATEGORI (Tugas 5: Ditambahkan flag 'g') ---
 const kognitifRegex = /\b(analisis|menghitung|konsep|memahami|menjawab|logika|pengetahuan)\b/ig;
 const afektifRegex = /\b(disiplin|kerjasama|tanggung jawab|tanggungjawab|sopan|inisiatif|toleransi|sikap)\b/ig;
 const psikomotorikRegex = /\b(praktik|menyusun|gerakan|melakukan|membuat|keterampilan|fisik|demonstrasi)\b/ig;
 
 
-// --- FUNGSI BANTUAN UNTUK MENAMBAHKAN KOMENTAR (BARU) ---
+// --- FUNGSI BANTUAN UNTUK MENAMBAHKAN KOMENTAR (Tugas 5) ---
 function appendComment(listElement, commentsArray) {
     if (commentsArray.length === 0) return;
     
-    // 1. Cek dan Hapus Placeholder ('Belum ada komentar')
     if (listElement.innerHTML.includes('Belum ada')) {
         listElement.innerHTML = '';
     }
     
-    // 2. Tambahkan setiap kata kunci yang terdeteksi
     commentsArray.forEach(keyword => {
-        // Hanya tambahkan kata kunci yang belum ada di list untuk menghindari duplikasi
         const itemHtml = `<li>Kata Kunci: <b>${keyword}</b></li>`;
         if (!listElement.innerHTML.includes(keyword)) {
              listElement.innerHTML += itemHtml;
@@ -173,7 +169,7 @@ function appendComment(listElement, commentsArray) {
 }
 
 
-// --- KLASIFIKASI BARU: MENGAMBIL KATA KUNCI SAJA ---
+// --- KLASIFIKASI BARU: MENGAMBIL KATA KUNCI SAJA (Tugas 5) ---
 function processTranscript(text) {
     const lowerText = text.toLowerCase();
     
@@ -183,7 +179,7 @@ function processTranscript(text) {
     
     let match;
 
-    // A. EKSTRAKSI KATA KUNCI KOGNITIF (menggunakan exec() dengan flag 'g')
+    // A. EKSTRAKSI KATA KUNCI KOGNITIF
     while ((match = kognitifRegex.exec(lowerText)) !== null) {
         kognitifKeywords.push(match[0]);
     }
@@ -203,7 +199,6 @@ function processTranscript(text) {
     appendComment(afektifList, afektifKeywords);
     appendComment(psikomotorikList, psikomotorikKeywords);
     
-    // Logika jika tidak ada kata kunci sama sekali (opsional)
     if (kognitifKeywords.length === 0 && afektifKeywords.length === 0 && psikomotorikKeywords.length === 0) {
         console.log(`[NON-KLASIFIKASI] Kalimat tidak mengandung kata kunci K-A-P: "${text}"`);
     }
@@ -231,6 +226,6 @@ stopButton.addEventListener('click', () => {
     }
 });
 
-// --- EVENT BARU: SIMPAN & MUAT ---
+// --- EVENT SIMPAN & MUAT (Tugas 1) ---
 saveButton.addEventListener('click', saveDataToLocalStorage);
 loadButton.addEventListener('click', loadDataFromLocalStorage);
