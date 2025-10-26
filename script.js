@@ -3,135 +3,144 @@ const stopButton = document.getElementById('stopButton');
 const statusMessage = document.getElementById('statusMessage');
 const resultText = document.getElementById('resultText');
 
-// Area untuk menampilkan hasil kategorisasi
-const kognitifResult = document.querySelector('#kognitif .result-content');
-const afektifResult = document.querySelector('#afektif .result-content');
-const psikomotorikResult = document.querySelector('#psikomotorik .result-content');
-
-
-// --- KONFIGURASI SPEECH RECOGNITION ---
+const kognitifList = document.getElementById('kognitif-list');
+const afektifList = document.getElementById('afektif-list');
+const psikomotorikList = document.getElementById('psikomotorik-list');
 
 let recognition;
+let finalTranscript = '';
+let isRecording = false;
 
-if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    
-    // Konfigurasi Kunci untuk proyek VoiceGrader
-    recognition.continuous = false; // Lebih baik false agar rekaman selesai setelah jeda panjang
-    recognition.interimResults = true; 
-    recognition.lang = 'id-ID'; // *** PENTING: Mengatur Bahasa Indonesia ***
+// --- CEK DUKUNGAN BROWSER ---
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'id-ID';
 
-    recognition.onstart = () => {
-        recordButton.disabled = true;
-        stopButton.disabled = false;
-        statusMessage.innerText = "🎤 Sedang Mendengarkan...";
-        resultText.innerText = ''; // Bersihkan hasil sebelumnya
-        
-        // Bersihkan kolom hasil
-        kognitifResult.innerText = '';
-        afektifResult.innerText = '';
-        psikomotorikResult.innerText = '';
-    };
+  // === Fungsi pembersihan dashboard ===
+  function clearDashboard() {
+    kognitifList.innerHTML = '<li>— Belum ada komentar —</li>';
+    afektifList.innerHTML = '<li>— Belum ada komentar —</li>';
+    psikomotorikList.innerHTML = '<li>— Belum ada komentar —</li>';
+  }
 
-    recognition.onresult = function (event) {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                finalTranscript += transcript + ' ';
-            } else {
-                interimTranscript += transcript;
-            }
-        }
-        
-        // Tampilkan hasil final dan sementara
-        resultText.innerText = finalTranscript + interimTranscript;
-        
-        // Hanya proses kategorisasi jika ada hasil final
-        if (finalTranscript) {
-            processTranscript(finalTranscript);
-        }
-    };
-
-    recognition.onerror = function (event) {
-        console.error('Speech recognition error:', event.error);
-        statusMessage.innerText = `Error: ${event.error}`;
-        recordButton.disabled = false;
-        stopButton.disabled = true;
-    };
-
-    recognition.onend = function () {
-        statusMessage.innerText = "Siap mendengarkan";
-        recordButton.disabled = false;
-        stopButton.disabled = true;
-    };
-    
-} else {
-    statusMessage.innerText = "Speech recognition tidak didukung di browser ini.";
-    recordButton.disabled = true;
+  // === Fungsi reset tombol ===
+  function stopRecordingCleanup() {
+    isRecording = false;
+    recordButton.disabled = false;
     stopButton.disabled = true;
+  }
+
+  // === Event Recognition Mulai ===
+  recognition.onstart = () => {
+    isRecording = true;
+    recordButton.disabled = true;
+    stopButton.disabled = false;
+    statusMessage.innerText = '🎤 Sedang mendengarkan...';
+    resultText.innerText = '';
+    finalTranscript = '';
+  };
+
+  // === Event Saat Hasil Didapat ===
+  recognition.onresult = (event) => {
+    let interimTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript.trim();
+
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript + ' ';
+        processTranscript(transcript);
+      } else {
+        interimTranscript = transcript;
+      }
+    }
+
+    resultText.innerText = finalTranscript + interimTranscript;
+  };
+
+  // === Tangani Error ===
+  recognition.onerror = (event) => {
+    console.error('Speech recognition error:', event.error);
+    statusMessage.innerText = `⚠️ Error: ${event.error}`;
+    stopRecordingCleanup();
+  };
+
+  // === Recognition Berhenti ===
+  recognition.onend = () => {
+    console.log('Recognition ended.');
+    if (isRecording) {
+      setTimeout(() => {
+        try {
+          recognition.start();
+          console.log('Recognition restarted...');
+        } catch (e) {
+          console.error('Restart error:', e);
+          stopRecordingCleanup();
+        }
+      }, 400);
+    } else {
+      stopRecordingCleanup();
+      statusMessage.innerText = '✅ Perekaman selesai.';
+    }
+  };
+} else {
+  alert('Browser tidak mendukung Speech Recognition. Gunakan Chrome di HTTPS/localhost.');
+  recordButton.disabled = true;
+  stopButton.disabled = true;
 }
 
+// --- REGEX UNTUK KATEGORI ---
+const kognitifRegex = /\b(analisis|menghitung|konsep|memahami|menjawab|logika|pengetahuan)\b/i;
+const afektifRegex = /\b(disiplin|kerjasama|tanggung jawab|tanggungjawab|sopan|inisiatif|toleransi|sikap)\b/i;
+const psikomotorikRegex = /\b(praktik|menyusun|gerakan|melakukan|membuat|keterampilan|fisik|demonstrasi)\b/i;
 
-// --- FUNGSI KLASIFIKASI (TUGAS 5) ---
-
-const keywordsKognitif = ['menghitung', 'analisis', 'logika', 'memahami', 'menjawab', 'konsep'];
-const keywordsAfektif = ['disiplin', 'kerjasama', 'tanggung jawab', 'sopan', 'inisiatif', 'toleransi'];
-const keywordsPsikomotorik = ['praktik', 'menyusun', 'gerakan', 'melakukan', 'membuat', 'ketrampilan'];
-
-
+// --- KLASIFIKASI ---
 function processTranscript(text) {
-    const lowerText = text.toLowerCase();
-    
-    let kognitifComments = [];
-    let afektifComments = [];
-    let psikomotorikComments = [];
-    
-    // Simulasi pengelompokan berdasarkan kata kunci
-    
-    if (keywordsKognitif.some(keyword => lowerText.includes(keyword))) {
-        kognitifComments.push(text);
-    }
-    
-    if (keywordsAfektif.some(keyword => lowerText.includes(keyword))) {
-        afektifComments.push(text);
-    }
-    
-    if (keywordsPsikomotorik.some(keyword => lowerText.includes(keyword))) {
-        psikomotorikComments.push(text);
-    }
-    
-    // Tampilkan di dashboard (simulasi)
-    if (kognitifComments.length > 0) {
-        kognitifResult.innerText += kognitifComments.join('\n') + '\n';
-    } else {
-         kognitifResult.innerText = '— Tidak ada komentar kognitif —';
-    }
-     if (afektifComments.length > 0) {
-        afektifResult.innerText += afektifComments.join('\n') + '\n';
-    } else {
-        afektifResult.innerText = '— Tidak ada komentar afektif —';
-    }
-     if (psikomotorikComments.length > 0) {
-        psikomotorikResult.innerText += psikomotorikComments.join('\n') + '\n';
-    } else {
-        psikomotorikResult.innerText = '— Tidak ada komentar psikomotorik —';
-    }
+  const lowerText = text.toLowerCase();
+  let classified = false;
+
+  if (kognitifRegex.test(lowerText)) {
+    if (kognitifList.innerHTML.includes('Belum ada')) kognitifList.innerHTML = '';
+    kognitifList.innerHTML += `<li>${text}</li>`;
+    classified = true;
+  }
+
+  if (afektifRegex.test(lowerText)) {
+    if (afektifList.innerHTML.includes('Belum ada')) afektifList.innerHTML = '';
+    afektifList.innerHTML += `<li>${text}</li>`;
+    classified = true;
+  }
+
+  if (psikomotorikRegex.test(lowerText)) {
+    if (psikomotorikList.innerHTML.includes('Belum ada')) psikomotorikList.innerHTML = '';
+    psikomotorikList.innerHTML += `<li>${text}</li>`;
+    classified = true;
+  }
+
+  if (!classified) console.log(`Tidak terklasifikasi: "${text}"`);
 }
 
-
-// --- EVENT LISTENERS ---
-
+// --- EVENT TOMBOL ---
 recordButton.addEventListener('click', () => {
-    if (recognition) {
-        recognition.start();
-    }
+  if (!recognition) return;
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(() => {
+      clearDashboard();
+      isRecording = true;
+      recognition.start();
+      statusMessage.innerText = '🎙️ Mulai merekam...';
+    })
+    .catch(() => {
+      alert('Izin mikrofon ditolak. Aktifkan mikrofon untuk menggunakan fitur ini.');
+    });
 });
 
 stopButton.addEventListener('click', () => {
-    if (recognition) {
-        recognition.stop();
-    }
+  if (recognition && isRecording) {
+    isRecording = false;
+    recognition.stop();
+  }
 });
