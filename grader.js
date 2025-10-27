@@ -1,231 +1,255 @@
+// ====================================================================================
+// TOBACCO AI PLATFORM: VISUAL GRADER & VOICE LOGGER
+// ====================================================================================
+
+// --- 1. Konfigurasi Global & Variabel UI ---
+const URL = "YOUR_MODEL_URL_DARI_TEACHABLE_MACHINE/"; // <--- GANTI URL INI!
+let model, webcam, labelContainer, maxPredictions;
+
+// Variabel Kontrol Audio
 const recordButton = document.getElementById('recordButton');
 const stopButton = document.getElementById('stopButton');
 const saveButton = document.getElementById('saveButton');
 const loadButton = document.getElementById('loadButton');
 
+// Variabel Dashboard Logger (Sesuai ID di grader.html)
 const statusMessage = document.getElementById('statusMessage');
 const resultText = document.getElementById('resultText');
+const kualitasDaunList = document.getElementById('kualitas-daun-list');
+const logistikPanenList = document.getElementById('logistik-panen-list');
+const tindakLanjutList = document.getElementById('tindak-lanjut-list');
 
-const kognitifList = document.getElementById('kognitif-list');
-const afektifList = document.getElementById('afektif-list');
-const psikomotorikList = document.getElementById('psikomotorik-list');
-
-let recognition;
+// Variabel Web Speech API
+let recognition = null;
 let finalTranscript = '';
-let isRecording = false;
 
-// --- FUNGSI BARU: SIMPAN DATA KE LOCAL STORAGE (Tugas 1) ---
-function saveDataToLocalStorage() {
-    const data = {
-        timestamp: new Date().toLocaleString('id-ID'),
-        fullTranscript: resultText.innerText,
-        kognitif: kognitifList.innerHTML, 
-        afektif: afektifList.innerHTML,
-        psikomotorik: psikomotorikList.innerHTML
-    };
-    
-    try {
-        localStorage.setItem('voiceGraderData', JSON.stringify(data));
-        statusMessage.innerText = '✅ Data Penilaian berhasil disimpan!';
-    } catch (e) {
-        statusMessage.innerText = '⚠️ Gagal menyimpan data (localStorage penuh).';
-        console.error("Local storage save error:", e);
+// --- REGEX UNTUK KATEGORI VOICE LOGGER (Baru) ---
+// Digunakan untuk mengklasifikasikan ucapan ke dalam kategori tembakau
+const kualitasDaunRegex = /\b(warna|cacat|bercak|sobek|kering|penyakit|jamur|tekstur|busuk|bagus|jelek|kualitas|premium)\b/ig;
+const logistikPanenRegex = /\b(gudang|lot|panen|tanggal|simpan|sortir|blok|kilo|jumlah|masuk)\b/ig;
+const tindakLanjutRegex = /\b(ikat|bungkus|proses|kirim|tambahan|segera|tugas|perlu|cek|perbaikan)\b/ig;
+
+// ====================================================================================
+// --- 2. FUNGSI UTAMA AI VISUAL (VISUAL GRADER) ---
+// ====================================================================================
+
+async function initVisualGrader() {
+    statusMessage.innerHTML = "Memuat model Visual Grader...";
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    // Muat model dan metadata
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+
+    // Siapkan Webcam
+    const flip = true; // Agar gambar tidak terbalik
+    webcam = new tmImage.Webcam(320, 240, flip); 
+    await webcam.setup(); // Meminta akses kamera
+    await webcam.play();
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+
+    // Siapkan area hasil prediksi
+    labelContainer = document.getElementById("label-container");
+    for (let i = 0; i < maxPredictions; i++) { 
+        labelContainer.appendChild(document.createElement("div"));
+    }
+
+    statusMessage.innerHTML = "Visual Grader Aktif. Memulai Prediksi...";
+    window.requestAnimationFrame(loop);
+}
+
+async function loop() {
+    webcam.update(); 
+    await predict();
+    window.requestAnimationFrame(loop);
+}
+
+async function predict() {
+    const prediction = await model.predict(webcam.canvas);
+    let highestProb = 0;
+    let highestClass = "Membaca...";
+
+    for (let i = 0; i < maxPredictions; i++) {
+        const classPrediction =
+            prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+        
+        // Update label container
+        labelContainer.childNodes[i].innerHTML = classPrediction;
+        
+        // Cari Grade dengan probabilitas tertinggi
+        if (prediction[i].probability > highestProb) {
+            highestProb = prediction[i].probability;
+            highestClass = prediction[i].className;
+        }
+    }
+
+    // Tampilkan hasil Grade tertinggi
+    if (highestProb > 0.6) { // Batas kepercayaan 60%
+        document.getElementById("predictionText").innerHTML = highestClass;
+        // Opsional: ganti warna teks hasil
+        document.getElementById("predictionText").style.color = (highestClass.includes("Grade A")) ? "#2ecc71" : 
+                                                               (highestClass.includes("Grade B")) ? "#FFC300" : 
+                                                               "#e74c3c"; // Merah untuk Grade Rendah
+    } else {
+        document.getElementById("predictionText").innerHTML = "Fokuskan Daun (Di Bawah 60%)";
+        document.getElementById("predictionText").style.color = "#b0b0c0";
     }
 }
 
-// --- FUNGSI BARU: MUAT DATA DARI LOCAL STORAGE (Tugas 1) ---
-function loadDataFromLocalStorage() {
-    try {
-        const storedData = localStorage.getItem('voiceGraderData');
-        
-        if (!storedData) {
-            statusMessage.innerText = '⚠️ Tidak ada data penilaian tersimpan.';
-            return;
-        }
-        
-        const data = JSON.parse(storedData);
-        
-        // Muatkan kembali data ke dashboard
-        resultText.innerText = data.fullTranscript;
-        kognitifList.innerHTML = data.kognitif;
-        afektifList.innerHTML = data.afektif;
-        psikomotorikList.innerHTML = data.psikomotorik;
-        
-        statusMessage.innerText = `📂 Data penilaian dimuat kembali dari ${data.timestamp}.`;
-        
-    } catch (e) {
-        statusMessage.innerText = '⚠️ Gagal memuat data (Format tidak valid).';
-        console.error("Local storage load error:", e);
-    }
-}
+// ====================================================================================
+// --- 3. FUNGSI AI AUDIO (VOICE LOGGER) ---
+// ====================================================================================
 
+function initVoiceLogger() {
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'id-ID'; // Bahasa Indonesia
 
-// --- CEK DUKUNGAN BROWSER ---
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'id-ID';
+        recognition.onstart = function() {
+            statusMessage.innerHTML = '🎤 Voice Logger AKTIF. Silakan Bicara...';
+            stopButton.disabled = false;
+            recordButton.disabled = true;
+        };
 
-    // === Fungsi pembersihan dashboard ===
-    function clearDashboard() {
-        kognitifList.innerHTML = '<li>— Belum ada komentar —</li>';
-        afektifList.innerHTML = '<li>— Belum ada komentar —</li>';
-        psikomotorikList.innerHTML = '<li>— Belum ada komentar —</li>';
-        resultText.innerText = 'Belum ada hasil rekaman.';
-    }
+        recognition.onend = function() {
+            statusMessage.innerHTML = '⏸ Voice Logger BERHENTI. Siap Merekam Kembali.';
+            stopButton.disabled = true;
+            recordButton.disabled = false;
+        };
 
-    // === Fungsi reset tombol (Fix Tombol & Tugas 3) ===
-    function stopRecordingCleanup() {
-        isRecording = false;
-        recordButton.disabled = false;
-        stopButton.disabled = true;
-        recordButton.classList.remove('recording'); // Hapus class saat selesai
-    }
+        recognition.onerror = function(event) {
+            console.error('Speech Recognition Error:', event.error);
+            statusMessage.innerHTML = `⚠️ Error Voice Logger: ${event.error}. Cek Mikrofon.`;
+            stopButton.disabled = true;
+            recordButton.disabled = false;
+        };
 
-    // === Event Recognition Mulai (Tugas 3) ===
-    recognition.onstart = () => {
-        isRecording = true;
-        recordButton.disabled = true;
-        stopButton.disabled = false;
-        recordButton.classList.add('recording'); // Tambah class saat mulai
-        statusMessage.innerText = '🎤 Sedang mendengarkan...';
-        resultText.innerText = '';
-        finalTranscript = '';
-    };
-
-    // === Event Saat Hasil Didapat ===
-    recognition.onresult = (event) => {
-        let interimTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript.trim();
-
-            if (event.results[i].isFinal) {
-                finalTranscript += transcript + ' ';
-                processTranscript(transcript);
-            } else {
-                interimTranscript = transcript;
-            }
-        }
-
-        resultText.innerText = finalTranscript + interimTranscript;
-    };
-
-    // === Tangani Error ===
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        statusMessage.innerText = `⚠️ Error: ${event.error}`;
-        stopRecordingCleanup();
-    };
-
-    // === Recognition Berhenti (Fix Stabilitas) ===
-    recognition.onend = () => {
-        console.log('Recognition ended.');
-        if (isRecording) {
-            // Restart otomatis jika user belum klik Stop
-            setTimeout(() => {
-                try {
-                    recognition.start();
-                    console.log('Recognition restarted...');
-                } catch (e) {
-                    console.error('Restart error:', e);
-                    stopRecordingCleanup();
+        recognition.onresult = function(event) {
+            let interimTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript + '. ';
+                    classifyTranscript(transcript); // Klasifikasi saat ucapan final
+                } else {
+                    interimTranscript += transcript;
                 }
-            }, 400);
-        } else {
-            // Jika berakhir karena user klik stop
-            stopRecordingCleanup();
-            statusMessage.innerText = '✅ Perekaman selesai.';
-        }
-    };
-} else {
-    alert('Browser tidak mendukung Speech Recognition. Gunakan Chrome di HTTPS/localhost.');
-    recordButton.disabled = true;
-    stopButton.disabled = true;
-}
-
-// --- REGEX UNTUK KATEGORI (Tugas 5: Ditambahkan flag 'g') ---
-const kognitifRegex = /\b(analisis|menghitung|konsep|memahami|menjawab|logika|pengetahuan)\b/ig;
-const afektifRegex = /\b(disiplin|kerjasama|tanggung jawab|tanggungjawab|sopan|inisiatif|toleransi|sikap)\b/ig;
-const psikomotorikRegex = /\b(praktik|menyusun|gerakan|melakukan|membuat|keterampilan|fisik|demonstrasi)\b/ig;
-
-
-// --- FUNGSI BANTUAN UNTUK MENAMBAHKAN KOMENTAR (Tugas 5) ---
-function appendComment(listElement, commentsArray) {
-    if (commentsArray.length === 0) return;
-    
-    if (listElement.innerHTML.includes('Belum ada')) {
-        listElement.innerHTML = '';
-    }
-    
-    commentsArray.forEach(keyword => {
-        const itemHtml = `<li>Kata Kunci: <b>${keyword}</b></li>`;
-        if (!listElement.innerHTML.includes(keyword)) {
-             listElement.innerHTML += itemHtml;
-        }
-    });
-}
-
-
-// --- KLASIFIKASI BARU: MENGAMBIL KATA KUNCI SAJA (Tugas 5) ---
-function processTranscript(text) {
-    const lowerText = text.toLowerCase();
-    
-    let kognitifKeywords = [];
-    let afektifKeywords = [];
-    let psikomotorikKeywords = [];
-    
-    let match;
-
-    // A. EKSTRAKSI KATA KUNCI KOGNITIF
-    while ((match = kognitifRegex.exec(lowerText)) !== null) {
-        kognitifKeywords.push(match[0]);
-    }
-
-    // B. EKSTRAKSI KATA KUNCI AFEKTIF
-    while ((match = afektifRegex.exec(lowerText)) !== null) {
-        afektifKeywords.push(match[0]);
-    }
-    
-    // C. EKSTRAKSI KATA KUNCI PSIKOMOTORIK
-    while ((match = psikomotorikRegex.exec(lowerText)) !== null) {
-        psikomotorikKeywords.push(match[0]);
-    }
-    
-    // D. UPDATE DASHBOARD
-    appendComment(kognitifList, kognitifKeywords);
-    appendComment(afektifList, afektifKeywords);
-    appendComment(psikomotorikList, psikomotorikKeywords);
-    
-    if (kognitifKeywords.length === 0 && afektifKeywords.length === 0 && psikomotorikKeywords.length === 0) {
-        console.log(`[NON-KLASIFIKASI] Kalimat tidak mengandung kata kunci K-A-P: "${text}"`);
+            }
+            resultText.innerHTML = finalTranscript + ' <span style="color:#FFC300;">' + interimTranscript + '</span>';
+        };
+    } else {
+        statusMessage.innerHTML = 'Browser Anda tidak mendukung Web Speech API. Gunakan Chrome/Edge terbaru.';
     }
 }
 
-// --- EVENT TOMBOL ---
-recordButton.addEventListener('click', () => {
-    if (!recognition) return;
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(() => {
-            clearDashboard();
-            isRecording = true;
-            recognition.start();
-            statusMessage.innerText = '🎙️ Mulai merekam...';
-        })
-        .catch(() => {
-            alert('Izin mikrofon ditolak. Aktifkan mikrofon untuk menggunakan fitur ini.');
-        });
-});
+function startRecording() {
+    if (recognition) {
+        finalTranscript = '';
+        resultText.innerHTML = 'Merekam...';
+        // Reset dashboard sebelum mulai
+        resetLoggerDashboard();
+        recognition.start();
+    }
+}
 
-stopButton.addEventListener('click', () => {
-    if (recognition && isRecording) {
-        isRecording = false;
+function stopRecording() {
+    if (recognition) {
         recognition.stop();
     }
-});
+}
 
-// --- EVENT SIMPAN & MUAT (Tugas 1) ---
-saveButton.addEventListener('click', saveDataToLocalStorage);
-loadButton.addEventListener('click', loadDataFromLocalStorage);
+// ====================================================================================
+// --- 4. FUNGSI KLASIFIKASI & TAMPILAN DASHBOARD ---
+// ====================================================================================
+
+function classifyTranscript(text) {
+    if (text.match(kualitasDaunRegex)) {
+        addLogEntry(kualitasDaunList, text);
+    }
+    if (text.match(logistikPanenRegex)) {
+        addLogEntry(logistikPanenList, text);
+    }
+    if (text.match(tindakLanjutRegex)) {
+        addLogEntry(tindakLanjutList, text);
+    }
+}
+
+function addLogEntry(listElement, text) {
+    // Hapus entry default
+    if (listElement.firstElementChild && listElement.firstElementChild.textContent.includes('Belum ada catatan')) {
+        listElement.innerHTML = '';
+    }
+    const listItem = document.createElement('li');
+    listItem.textContent = text.trim();
+    listElement.appendChild(listItem);
+}
+
+function resetLoggerDashboard() {
+    kualitasDaunList.innerHTML = '<li>— Belum ada catatan —</li>';
+    logistikPanenList.innerHTML = '<li>— Belum ada catatan —</li>';
+    tindakLanjutList.innerHTML = '<li>— Belum ada catatan —</li>';
+}
+
+// ====================================================================================
+// --- 5. FUNGSI SIMPAN/MUAT DATA (LocalStorage) ---
+// ====================================================================================
+
+function saveData() {
+    if (finalTranscript.length === 0) {
+        alert("Tidak ada transkrip untuk disimpan!");
+        return;
+    }
+    const data = {
+        transcript: finalTranscript,
+        kualitasDaun: Array.from(kualitasDaunList.children).map(li => li.textContent),
+        logistikPanen: Array.from(logistikPanenList.children).map(li => li.textContent),
+        tindakLanjut: Array.from(tindakLanjutList.children).map(li => li.textContent),
+        visualGrade: document.getElementById("predictionText").textContent,
+        timestamp: new Date().toLocaleString()
+    };
+    // Simpan data sebagai string JSON di Local Storage
+    localStorage.setItem('tobaccoAIData', JSON.stringify(data));
+    alert(`Data Grading Tembakau berhasil disimpan pada ${data.timestamp}!`);
+}
+
+function loadData() {
+    const savedData = localStorage.getItem('tobaccoAIData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        finalTranscript = data.transcript;
+        resultText.innerHTML = finalTranscript;
+        
+        // Muat kembali logger dashboard
+        resetLoggerDashboard();
+        data.kualitasDaun.forEach(text => addLogEntry(kualitasDaunList, text));
+        data.logistikPanen.forEach(text => addLogEntry(logistikPanenList, text));
+        data.tindakLanjut.forEach(text => addLogEntry(tindakLanjutList, text));
+
+        // Tampilkan Grade Visual terakhir yang tersimpan
+        document.getElementById("predictionText").innerHTML = data.visualGrade || "Data lama, Grade tidak tersimpan.";
+        alert(`Data Grading Tembakau berhasil dimuat dari ${data.timestamp}.`);
+    } else {
+        alert("Tidak ada data grading yang tersimpan di browser ini.");
+    }
+}
+
+// ====================================================================================
+// --- 6. EVENT LISTENERS & INICIALISASI UTAMA ---
+// ====================================================================================
+
+window.onload = function() {
+    // 1. Inisiasi Visual Grader (AI Visual)
+    initVisualGrader();
+
+    // 2. Inisiasi Voice Logger (AI Audio)
+    initVoiceLogger(); 
+
+    // 3. Pasang Event Listeners
+    recordButton.addEventListener('click', startRecording);
+    stopButton.addEventListener('click', stopRecording);
+    saveButton.addEventListener('click', saveData);
+    loadButton.addEventListener('click', loadData);
+};
