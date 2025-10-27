@@ -1,243 +1,205 @@
-/* === Reset & Global === */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 :root {
-    --neon-green: #00ff66;
-    --dark-bg: #0a0a12;
-    --card-bg: #121220;
+    /* Warna Sesuai Konsep */
+    --accent-yellow: #FFC300;     /* Kuning Tembakau/Emas */
+    --accent-green: #2ecc71;      /* Hijau Status Aktif */
+    --accent-blue: #3498db;       /* Biru Tech (untuk tombol/log) */
+    --dark-bg: #0B121A;           /* Deep Space Blue Background */
+    --card-bg: #1A212A;           /* Latar Card/Box */
     --text-primary: #ffffff;
     --text-secondary: #b0b0c0;
-    --border-neon: rgba(0, 255, 102, 0.2);
+    --border-neon: rgba(255, 195, 0, 0.2); /* Border Kuning Muda */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--dark-bg);
+    background-color: var(--dark-bg);
     color: var(--text-primary);
     line-height: 1.6;
-    padding: 20px;
-    min-height: 100vh;
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 255, 102, 0.03) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(0, 255, 102, 0.02) 0%, transparent 25%);
+    padding-bottom: 50px; /* Ruang untuk footer */
 }
 
-/* === Header === */
+/* --- Header & Typography --- */
 header {
     text-align: center;
-    margin-bottom: 30px;
-    padding: 25px;
-    background: rgba(18, 18, 32, 0.6);
-    border-radius: 20px;
-    border: 1px solid var(--border-neon);
-    box-shadow: 0 0 20px rgba(0, 255, 102, 0.1);
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    position: relative;
-    overflow: hidden;
-}
-
-header::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-        transparent,
-        var(--neon-green),
-        transparent 30%
-    );
-    animation: rotate 6s linear infinite;
-    opacity: 0.1;
-    z-index: -1;
-}
-
-@keyframes rotate {
-    to { transform: rotate(360deg); }
+    padding: 40px 20px 20px;
+    background: #0B121A;
+    border-bottom: 2px solid var(--border-neon);
 }
 
 header h1 {
-    font-size: 2.4rem;
-    color: var(--neon-green);
-    margin-bottom: 10px;
-    text-shadow: 0 0 10px rgba(0, 255, 102, 0.7);
-    letter-spacing: 1px;
+    color: var(--accent-yellow);
+    font-size: 2.5rem;
+    text-shadow: 0 0 10px rgba(255, 195, 0, 0.5);
+    margin-bottom: 5px;
 }
 
 header p {
-    font-size: 1.1rem;
     color: var(--text-secondary);
-    opacity: 0.9;
+    margin-bottom: 15px;
 }
 
-/* === Controls === */
+#docLink {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    border: 1px solid var(--accent-blue);
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+#docLink:hover {
+    background: rgba(52, 152, 219, 0.1);
+}
+
+h2 {
+    text-align: center;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    margin-bottom: 25px;
+}
+
+/* --- Kontrol Buttons --- */
 #controls {
     display: flex;
     justify-content: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin: 25px auto 20px;
-    max-width: 900px; /* Lebarkan sedikit untuk 4 tombol */
+    gap: 10px;
+    padding: 20px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-neon);
+    flex-wrap: wrap; /* Penting untuk responsif HP */
 }
 
 #controls button {
-    padding: 14px 28px;
-    font-size: 1.05rem;
-    font-weight: bold;
+    padding: 12px 20px;
     border: none;
-    border-radius: 50px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    background: rgba(0, 255, 102, 0.08);
-    color: var(--neon-green);
-    border: 1px solid var(--border-neon);
-    box-shadow: 0 4px 12px rgba(0, 255, 102, 0.1);
+    font-weight: bold;
+    transition: background 0.3s, transform 0.1s;
 }
 
-#recordButton:hover:not(:disabled):not(.recording) { /* Pengecualian recording class */
-    background: rgba(0, 255, 102, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0, 255, 102, 0.25);
+#recordButton {
+    background-color: var(--accent-green);
+    color: var(--dark-bg);
 }
+#recordButton:hover { background-color: #27ae60; }
+#recordButton:active { transform: scale(0.98); }
 
-/* --- Style Khusus Saat Merekam (Tugas 3) --- */
-@keyframes pulse-record {
-    0% {
-        box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7); /* Merah lembut */
-    }
-    70% {
-        box-shadow: 0 0 0 15px rgba(255, 60, 60, 0); /* Denyutan memudar */
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
-    }
+#stopButton, #saveButton, #loadButton {
+    background-color: var(--accent-blue);
+    color: white;
 }
-
-.recording {
-    background: rgba(255, 60, 60, 0.2) !important; 
-    color: #ff5c5c !important; 
-    border-color: rgba(255, 60, 60, 0.5) !important;
-    animation: pulse-record 1.5s infinite; 
-}
-
-
-/* Tombol Stop */
-#stopButton {
-    background: rgba(255, 60, 60, 0.1);
-    color: #ff5c5c;
-    border-color: rgba(255, 60, 60, 0.3);
-}
-
-#stopButton:hover:not(:disabled) {
-    background: rgba(255, 60, 60, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(255, 60, 60, 0.2);
-}
-
-/* Tombol Simpan/Muat (Tugas 1 Styling) */
-#saveButton {
-    background: rgba(255, 255, 0, 0.1);
-    color: #ffcc00;
-    border-color: rgba(255, 255, 0, 0.3);
-}
-
-#loadButton {
-    background: rgba(60, 140, 255, 0.1);
-    color: #60a0ff;
-    border-color: rgba(60, 140, 255, 0.3);
-}
-
-#saveButton:hover:not(:disabled),
-#loadButton:hover:not(:disabled) {
-    background: rgba(255, 255, 0, 0.2);
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(255, 255, 0, 0.25);
-}
-
-#loadButton:hover:not(:disabled) {
-    background: rgba(60, 140, 255, 0.2);
-    box-shadow: 0 6px 18px rgba(60, 140, 255, 0.25);
-}
-
-button:disabled {
+#stopButton:disabled, #saveButton:disabled, #loadButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-    animation: none; /* Matikan animasi jika disabled */
 }
 
-/* === Status Message === */
+/* --- Status Message & Main Content Layout --- */
 #statusMessage {
     text-align: center;
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: var(--neon-green);
-    margin: 15px auto;
-    padding: 12px 20px;
-    background: rgba(0, 255, 102, 0.05);
-    border-radius: 12px;
-    border-left: 4px solid var(--neon-green);
-    max-width: 600px;
+    padding: 15px;
+    background: #2a3440;
+    color: var(--text-primary);
+    font-style: italic;
+    border-bottom: 1px solid var(--border-neon);
 }
 
-/* === Divider === */
-hr {
-    border: 0;
-    height: 1px;
-    background: linear-gradient(to right, transparent, var(--neon-green), transparent);
+#mainContent {
+    display: flex;
+    max-width: 1200px;
     margin: 30px auto;
-    max-width: 800px;
-    opacity: 0.5;
+    padding: 0 20px;
+    gap: 30px;
 }
 
-/* === Dashboard === */
-#dashboard h2,
-#transcript h2 {
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 1.8rem;
-    color: white;
-    text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+/* --- Visual Grader (Kiri/Atas) --- */
+#visualGrader {
+    flex: 1; /* Ambil setengah ruang di desktop */
+}
+
+#cameraArea {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap; 
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border-neon);
+}
+
+#webcam-container {
+    width: 320px; 
+    height: 240px;
+    background: #0d0d1a;
+    border: 3px solid var(--accent-yellow);
+    border-radius: 8px;
+    overflow: hidden;
+    /* Memberi shadow efek tech */
+    box-shadow: 0 0 15px rgba(255, 195, 0, 0.4); 
+}
+
+#gradeResult {
+    padding: 15px;
+    text-align: left;
+    min-width: 250px;
+}
+
+#gradeResult h3 {
+    color: var(--accent-yellow);
+    margin-bottom: 10px;
+    text-align: left;
+    font-size: 1.2rem;
+}
+
+#predictionText {
+    font-size: 2.2rem; /* Ukuran besar untuk hasil Grade A/B/C */
+    font-weight: bold;
+    color: var(--accent-green);
+    margin-bottom: 15px;
+}
+
+/* Style untuk label persentase dari Teachable Machine */
+#label-container div {
+    color: var(--text-secondary);
+    background: #2a3440;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* --- Voice Logger (Kanan/Bawah) --- */
+#voiceLogger {
+    flex: 1; /* Ambil setengah ruang di desktop */
 }
 
 #resultContainer {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-    max-width: 900px;
-    margin: 0 auto 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .category-box {
     background: var(--card-bg);
-    border-radius: 18px;
-    padding: 22px;
+    padding: 15px;
+    border-radius: 10px;
     border: 1px solid var(--border-neon);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
-}
-
-.category-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 255, 102, 0.15);
-    border-color: rgba(0, 255, 102, 0.4);
 }
 
 .category-box h3 {
-    font-size: 1.25rem;
-    margin-bottom: 16px;
-    color: var(--neon-green);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-shadow: 0 0 6px rgba(0, 255, 102, 0.4);
+    color: var(--accent-blue);
+    text-align: left;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
 }
 
 .category-box ul {
@@ -245,97 +207,63 @@ hr {
     padding: 0;
 }
 
-.category-box li {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    color: #e0e0ff;
-    font-size: 1rem;
-    line-height: 1.5;
+.category-box ul li {
+    background: #2a3440;
+    margin-bottom: 5px;
+    padding: 8px;
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
 }
 
-/* Styling untuk kata kunci */
-.category-box li b {
-    color: #ffcc00; /* Aksen kuning/emas untuk kata kunci */
-}
-
-.category-box li:last-child {
-    border-bottom: none;
-}
-
-.category-box li::before {
-    content: "•";
-    color: var(--neon-green);
-    font-weight: bold;
-    display: inline-block;
-    width: 1.2em;
-    margin-left: -1.2em;
-}
-
-/* === Transkrip === */
+/* --- Transkrip --- */
 #transcript {
-    max-width: 800px;
-    margin: 0 auto 40px;
-    padding: 0 10px;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+#transcript h2 {
+    margin-bottom: 10px;
 }
 
 #resultText {
-    background: rgba(0, 255, 102, 0.03);
-    padding: 20px;
-    border-radius: 16px;
-    border: 1px solid var(--border-neon);
-    font-family: 'Courier New', monospace;
-    font-size: 1.05rem;
-    line-height: 1.7;
-    color: #e6e6ff;
-    word-wrap: break-word;
-    white-space: pre-wrap;
-}
-
-/* === Footer === */
-footer {
-    text-align: center;
-    padding: 20px;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 8px;
+    min-height: 50px;
     color: var(--text-secondary);
-    font-size: 0.95rem;
-    opacity: 0.8;
+    border: 1px solid var(--border-neon);
 }
 
-/* === Responsif === */
+/* --- Responsiveness (Mobile View) --- */
 @media (max-width: 768px) {
-    .category-box {
-        padding: 18px;
-    }
-
-    header h1 {
-        font-size: 2rem;
+    #mainContent {
+        flex-direction: column; /* Ubah ke tumpukan vertikal */
     }
 
     #controls {
         flex-direction: column;
-        align-items: center;
+        gap: 8px;
     }
-
+    
     #controls button {
-        width: 90%;
-        max-width: 300px;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 12px;
+        width: 100%;
     }
 
-    header {
-        padding: 18px;
+    /* Webcam dan Hasil Prediksi tampil penuh di atas */
+    #visualGrader, #voiceLogger {
+        width: 100%;
+        margin-top: 10px;
     }
 
-    header h1 {
-        font-size: 1.8rem;
+    #cameraArea {
+        flex-direction: column;
+        gap: 10px;
     }
 
-    #dashboard h2,
-    #transcript h2 {
-        font-size: 1.5rem;
+    #webcam-container, #gradeResult {
+        width: 100%;
+        min-width: unset;
     }
 }
