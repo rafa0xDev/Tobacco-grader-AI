@@ -3,7 +3,7 @@
 // ====================================================================================
 
 // --- 1. Konfigurasi Global & Variabel UI ---
-const URL = "YOUR_MODEL_URL_DARI_TEACHABLE_MACHINE/"; // <--- GANTI URL INI!
+const URL = "https://teachablemachine.withgoogle.com/models/7gCLuSeFJ/"; // <--- GANTI URL INI!
 let model, webcam, labelContainer, maxPredictions;
 
 // Variabel Kontrol Audio
