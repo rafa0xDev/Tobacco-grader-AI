@@ -44,6 +44,16 @@ header p {
     margin-bottom: 15px;
 }
 
+footer {
+    text-align: center;
+    padding: 15px;
+    background: #0B121A;
+    border-top: 2px solid var(--border-neon);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
 #docLink {
     color: var(--accent-blue);
     text-decoration: none;

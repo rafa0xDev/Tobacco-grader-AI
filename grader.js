@@ -1,10 +1,11 @@
 // ====================================================================================
-// TOBACCO AI PLATFORM: VISUAL GRADER & VOICE LOGGER
+// TOBACCO AI PLATFORM: VISUAL GRADER & VOICE LOGGER (FINAL FRONTEND VERSION)
 // ====================================================================================
 
 // --- 1. Konfigurasi Global & Variabel UI ---
-const URL = "https://teachablemachine.withgoogle.com/models/7gCLuSeFJ/"; // <--- GANTI URL INI!
+const URL = "https://teachablemachine.withgoogle.com/models/7gCLuSeFJ/"; // <--- GANTI URL JIKA PERLU
 let model, webcam, labelContainer, maxPredictions;
+let visualActive = true; // status kamera & loop
 
 // Variabel Kontrol Audio
 const recordButton = document.getElementById('recordButton');
@@ -12,7 +13,7 @@ const stopButton = document.getElementById('stopButton');
 const saveButton = document.getElementById('saveButton');
 const loadButton = document.getElementById('loadButton');
 
-// Variabel Dashboard Logger (Sesuai ID di grader.html)
+// Variabel Dashboard Logger
 const statusMessage = document.getElementById('statusMessage');
 const resultText = document.getElementById('resultText');
 const kualitasDaunList = document.getElementById('kualitas-daun-list');
@@ -23,8 +24,7 @@ const tindakLanjutList = document.getElementById('tindak-lanjut-list');
 let recognition = null;
 let finalTranscript = '';
 
-// --- REGEX UNTUK KATEGORI VOICE LOGGER (Baru) ---
-// Digunakan untuk mengklasifikasikan ucapan ke dalam kategori tembakau
+// --- REGEX UNTUK KATEGORI VOICE LOGGER ---
 const kualitasDaunRegex = /\b(warna|cacat|bercak|sobek|kering|penyakit|jamur|tekstur|busuk|bagus|jelek|kualitas|premium)\b/ig;
 const logistikPanenRegex = /\b(gudang|lot|panen|tanggal|simpan|sortir|blok|kilo|jumlah|masuk)\b/ig;
 const tindakLanjutRegex = /\b(ikat|bungkus|proses|kirim|tambahan|segera|tugas|perlu|cek|perbaikan)\b/ig;
@@ -34,36 +34,69 @@ const tindakLanjutRegex = /\b(ikat|bungkus|proses|kirim|tambahan|segera|tugas|pe
 // ====================================================================================
 
 async function initVisualGrader() {
-    statusMessage.innerHTML = "Memuat model Visual Grader...";
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
+    try {
+        statusMessage.innerHTML = "📦 Memuat model Visual Grader...";
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
 
-    // Muat model dan metadata
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
 
-    // Siapkan Webcam
-    const flip = true; // Agar gambar tidak terbalik
-    webcam = new tmImage.Webcam(320, 240, flip); 
-    await webcam.setup(); // Meminta akses kamera
-    await webcam.play();
-    document.getElementById("webcam-container").appendChild(webcam.canvas);
+        const flip = true;
+        webcam = new tmImage.Webcam(320, 240, flip);
+        await webcam.setup();
+        await webcam.play();
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-    // Siapkan area hasil prediksi
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) { 
-        labelContainer.appendChild(document.createElement("div"));
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < maxPredictions; i++) {
+            labelContainer.appendChild(document.createElement("div"));
+        }
+
+        let gradeResult = document.getElementById("gradeResult");
+        if (!document.getElementById("descriptionText")) {
+            const descEl = document.createElement("p");
+            descEl.id = "descriptionText";
+            descEl.style.marginTop = "10px";
+            descEl.style.fontSize = "1rem";
+            descEl.style.color = "#b0b0c0";
+            descEl.textContent = "Menunggu hasil prediksi untuk deskripsi...";
+            gradeResult.appendChild(descEl);
+        }
+
+        statusMessage.innerHTML = "✅ Visual Grader Aktif. Memulai prediksi...";
+        window.requestAnimationFrame(loop);
+
+        // 🔍 Pantau status kamera tiap 2 detik
+        setInterval(checkCameraStatus, 2000);
+
+    } catch (err) {
+        console.error("Error initVisualGrader:", err);
+        statusMessage.innerHTML = `⚠️ Gagal memuat model atau kamera: ${err.message}`;
+        visualActive = false;
     }
-
-    statusMessage.innerHTML = "Visual Grader Aktif. Memulai Prediksi...";
-    window.requestAnimationFrame(loop);
 }
 
 async function loop() {
-    webcam.update(); 
-    await predict();
-    window.requestAnimationFrame(loop);
+    try {
+        if (visualActive && webcam && webcam.canvas) {
+            webcam.update();
+            await predict();
+            window.requestAnimationFrame(loop);
+        } else {
+            statusMessage.innerHTML = "⚠️ Kamera tidak aktif. Penilaian visual dihentikan sementara.";
+        }
+    } catch (err) {
+        console.error("Error loop:", err);
+        statusMessage.innerHTML = "❌ Terjadi kesalahan saat loop. Penilaian dihentikan.";
+        visualActive = false;
+    }
 }
+
+// ====================================================================================
+// --- 3. PREDIKSI & DESKRIPSI OTOMATIS ---
+// ====================================================================================
 
 async function predict() {
     const prediction = await model.predict(webcam.canvas);
@@ -73,67 +106,167 @@ async function predict() {
     for (let i = 0; i < maxPredictions; i++) {
         const classPrediction =
             prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-        
-        // Update label container
-        labelContainer.childNodes[i].innerHTML = classPrediction;
-        
-        // Cari Grade dengan probabilitas tertinggi
+        if (labelContainer && labelContainer.childNodes[i]) {
+            labelContainer.childNodes[i].innerHTML = classPrediction;
+        }
         if (prediction[i].probability > highestProb) {
             highestProb = prediction[i].probability;
             highestClass = prediction[i].className;
         }
     }
 
-    // Tampilkan hasil Grade tertinggi
-    if (highestProb > 0.6) { // Batas kepercayaan 60%
-        document.getElementById("predictionText").innerHTML = highestClass;
-        // Opsional: ganti warna teks hasil
-        document.getElementById("predictionText").style.color = (highestClass.includes("Grade A")) ? "#2ecc71" : 
-                                                               (highestClass.includes("Grade B")) ? "#FFC300" : 
-                                                               "#e74c3c"; // Merah untuk Grade Rendah
+    const predictionTextEl = document.getElementById("predictionText");
+    const descriptionEl = document.getElementById("descriptionText");
+
+    if (highestProb > 0.6) {
+        predictionTextEl.innerHTML = highestClass;
+        predictionTextEl.style.color =
+            highestClass.includes("Grade A") ? "#2ecc71" :
+            highestClass.includes("Grade B") ? "#FFC300" :
+            "#e74c3c";
+
+        const features = analyzeImageFeatures(webcam.canvas);
+        const deskripsi = buildDescriptionFromFeatures(highestClass, highestProb, features);
+        descriptionEl.innerHTML = deskripsi;
+
     } else {
-        document.getElementById("predictionText").innerHTML = "Fokuskan Daun (Di Bawah 60%)";
-        document.getElementById("predictionText").style.color = "#b0b0c0";
+        predictionTextEl.innerHTML = "Fokuskan Daun (Di Bawah 60%)";
+        predictionTextEl.style.color = "#b0b0c0";
+        descriptionEl.innerHTML = "Model belum cukup yakin — perbaiki pencahayaan atau jarak kamera.";
     }
 }
 
 // ====================================================================================
-// --- 3. FUNGSI AI AUDIO (VOICE LOGGER) ---
+// --- 4. Analisis Visual Fitur (warna, terang, tekstur) ---
 // ====================================================================================
+function analyzeImageFeatures(canvas) {
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+    let r = 0, g = 0, b = 0, total = 0;
+    let brightnessArr = [];
 
+    for (let i = 0; i < data.length; i += 16) {
+        r += data[i];
+        g += data[i + 1];
+        b += data[i + 2];
+        const brightness = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        brightnessArr.push(brightness);
+        total++;
+    }
+
+    const meanR = r / total;
+    const meanG = g / total;
+    const meanB = b / total;
+    const meanBrightness = brightnessArr.reduce((a, b) => a + b, 0) / brightnessArr.length;
+    const variance = brightnessArr.reduce((a, b) => a + Math.pow(b - meanBrightness, 2), 0) / brightnessArr.length;
+    const stdDev = Math.sqrt(variance);
+    const greenRatio = meanG / ((meanR + meanB) / 2 + 1e-6);
+    const yellowLikelihood = (meanR + meanG) / 2 - meanB;
+
+    return { meanR, meanG, meanB, meanBrightness, stdDev, greenRatio, yellowLikelihood };
+}
+
+// ====================================================================================
+// --- 5. Deskripsi Otomatis + Voice Logger ---
+// ====================================================================================
+function buildDescriptionFromFeatures(highestClass, highestProb, f) {
+    let base = "";
+    if (highestClass.includes("Grade A")) {
+        base = "Daun tembakau kualitas premium terdeteksi di area gudang penyimpanan. Kondisi sangat baik, warna hijau segar, dan tekstur rata tanpa cacat.";
+    } else if (highestClass.includes("Grade B")) {
+        base = "Daun tembakau dengan kualitas menengah terdeteksi di gudang. Warna mulai berubah dan tekstur agak tidak rata, namun masih layak untuk diproses lebih lanjut.";
+    } else if (highestClass.includes("Grade C")) {
+        base = "Daun tembakau dengan kualitas rendah terdeteksi. Warna cenderung menguning dan tekstur menunjukkan bercak atau kerusakan. Perlu penyortiran atau tindakan lanjut.";
+    } else {
+        base = `Hasil pengamatan: ${highestClass}.`;
+    }
+
+    let cues = [];
+    if (f.greenRatio > 1.3 && f.meanBrightness > 90) {
+        cues.push("warna dominan hijau cerah");
+    } else if (f.yellowLikelihood > 30) {
+        cues.push("terdapat kecenderungan menguning");
+    } else if (f.meanBrightness < 70) {
+        cues.push("pencahayaan rendah, warna daun agak gelap");
+    } else {
+        cues.push("warna terlihat normal");
+    }
+
+    if (f.stdDev > 25) {
+        cues.push("tekstur tidak merata");
+    } else {
+        cues.push("tekstur relatif halus");
+    }
+
+    const confPercent = Math.round(highestProb * 100);
+    const template = `${base} (${confPercent}% keyakinan sistem). Catatan visual tambahan: ${cues.join(', ')}.`;
+
+    if (typeof classifyTranscript === 'function') {
+        classifyTranscript(template);
+        resultText.innerHTML += `<br><span style="color:#2ecc71;">[AUTO] ${template}</span><br>`;
+        finalTranscript += template + " ";
+    }
+
+    return template;
+}
+
+// ====================================================================================
+// --- 6. DETEKSI KAMERA HIDUP/MATI ---
+// ====================================================================================
+function checkCameraStatus() {
+    try {
+        const stream = webcam.webcam.srcObject;
+        const tracks = stream ? stream.getVideoTracks() : [];
+        const cameraActive = tracks.length > 0 && tracks[0].readyState === "live";
+
+        if (!cameraActive && visualActive) {
+            visualActive = false;
+            statusMessage.innerHTML = "⚠️ Kamera tidak aktif. Penilaian visual dihentikan sementara.";
+        } else if (cameraActive && !visualActive) {
+            visualActive = true;
+            statusMessage.innerHTML = "✅ Kamera aktif kembali. Melanjutkan penilaian...";
+            window.requestAnimationFrame(loop);
+        }
+    } catch (err) {
+        console.warn("Kamera belum siap:", err.message);
+        visualActive = false;
+    }
+}
+
+// ====================================================================================
+// --- 7. VOICE LOGGER (tidak diubah, hanya disesuaikan integrasi) ---
+// ====================================================================================
 function initVoiceLogger() {
     if ('webkitSpeechRecognition' in window) {
         recognition = new webkitSpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'id-ID'; // Bahasa Indonesia
+        recognition.lang = 'id-ID';
 
-        recognition.onstart = function() {
+        recognition.onstart = () => {
             statusMessage.innerHTML = '🎤 Voice Logger AKTIF. Silakan Bicara...';
             stopButton.disabled = false;
             recordButton.disabled = true;
         };
-
-        recognition.onend = function() {
-            statusMessage.innerHTML = '⏸ Voice Logger BERHENTI. Siap Merekam Kembali.';
+        recognition.onend = () => {
+            statusMessage.innerHTML = '⏸ Voice Logger BERHENTI.';
             stopButton.disabled = true;
             recordButton.disabled = false;
         };
-
-        recognition.onerror = function(event) {
+        recognition.onerror = (event) => {
             console.error('Speech Recognition Error:', event.error);
-            statusMessage.innerHTML = `⚠️ Error Voice Logger: ${event.error}. Cek Mikrofon.`;
-            stopButton.disabled = true;
-            recordButton.disabled = false;
+            statusMessage.innerHTML = `⚠️ Error Voice Logger: ${event.error}.`;
         };
-
-        recognition.onresult = function(event) {
+        recognition.onresult = (event) => {
             let interimTranscript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
                     finalTranscript += transcript + '. ';
-                    classifyTranscript(transcript); // Klasifikasi saat ucapan final
+                    classifyTranscript(transcript);
                 } else {
                     interimTranscript += transcript;
                 }
@@ -141,113 +274,16 @@ function initVoiceLogger() {
             resultText.innerHTML = finalTranscript + ' <span style="color:#FFC300;">' + interimTranscript + '</span>';
         };
     } else {
-        statusMessage.innerHTML = 'Browser Anda tidak mendukung Web Speech API. Gunakan Chrome/Edge terbaru.';
-    }
-}
-
-function startRecording() {
-    if (recognition) {
-        finalTranscript = '';
-        resultText.innerHTML = 'Merekam...';
-        // Reset dashboard sebelum mulai
-        resetLoggerDashboard();
-        recognition.start();
-    }
-}
-
-function stopRecording() {
-    if (recognition) {
-        recognition.stop();
+        statusMessage.innerHTML = 'Browser tidak mendukung Web Speech API.';
     }
 }
 
 // ====================================================================================
-// --- 4. FUNGSI KLASIFIKASI & TAMPILAN DASHBOARD ---
+// --- 8. Kontrol Tombol & Inisialisasi ---
 // ====================================================================================
-
-function classifyTranscript(text) {
-    if (text.match(kualitasDaunRegex)) {
-        addLogEntry(kualitasDaunList, text);
-    }
-    if (text.match(logistikPanenRegex)) {
-        addLogEntry(logistikPanenList, text);
-    }
-    if (text.match(tindakLanjutRegex)) {
-        addLogEntry(tindakLanjutList, text);
-    }
-}
-
-function addLogEntry(listElement, text) {
-    // Hapus entry default
-    if (listElement.firstElementChild && listElement.firstElementChild.textContent.includes('Belum ada catatan')) {
-        listElement.innerHTML = '';
-    }
-    const listItem = document.createElement('li');
-    listItem.textContent = text.trim();
-    listElement.appendChild(listItem);
-}
-
-function resetLoggerDashboard() {
-    kualitasDaunList.innerHTML = '<li>— Belum ada catatan —</li>';
-    logistikPanenList.innerHTML = '<li>— Belum ada catatan —</li>';
-    tindakLanjutList.innerHTML = '<li>— Belum ada catatan —</li>';
-}
-
-// ====================================================================================
-// --- 5. FUNGSI SIMPAN/MUAT DATA (LocalStorage) ---
-// ====================================================================================
-
-function saveData() {
-    if (finalTranscript.length === 0) {
-        alert("Tidak ada transkrip untuk disimpan!");
-        return;
-    }
-    const data = {
-        transcript: finalTranscript,
-        kualitasDaun: Array.from(kualitasDaunList.children).map(li => li.textContent),
-        logistikPanen: Array.from(logistikPanenList.children).map(li => li.textContent),
-        tindakLanjut: Array.from(tindakLanjutList.children).map(li => li.textContent),
-        visualGrade: document.getElementById("predictionText").textContent,
-        timestamp: new Date().toLocaleString()
-    };
-    // Simpan data sebagai string JSON di Local Storage
-    localStorage.setItem('tobaccoAIData', JSON.stringify(data));
-    alert(`Data Grading Tembakau berhasil disimpan pada ${data.timestamp}!`);
-}
-
-function loadData() {
-    const savedData = localStorage.getItem('tobaccoAIData');
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        finalTranscript = data.transcript;
-        resultText.innerHTML = finalTranscript;
-        
-        // Muat kembali logger dashboard
-        resetLoggerDashboard();
-        data.kualitasDaun.forEach(text => addLogEntry(kualitasDaunList, text));
-        data.logistikPanen.forEach(text => addLogEntry(logistikPanenList, text));
-        data.tindakLanjut.forEach(text => addLogEntry(tindakLanjutList, text));
-
-        // Tampilkan Grade Visual terakhir yang tersimpan
-        document.getElementById("predictionText").innerHTML = data.visualGrade || "Data lama, Grade tidak tersimpan.";
-        alert(`Data Grading Tembakau berhasil dimuat dari ${data.timestamp}.`);
-    } else {
-        alert("Tidak ada data grading yang tersimpan di browser ini.");
-    }
-}
-
-// ====================================================================================
-// --- 6. EVENT LISTENERS & INICIALISASI UTAMA ---
-// ====================================================================================
-
 window.onload = function() {
-    // 1. Inisiasi Visual Grader (AI Visual)
     initVisualGrader();
-
-    // 2. Inisiasi Voice Logger (AI Audio)
-    initVoiceLogger(); 
-
-    // 3. Pasang Event Listeners
+    initVoiceLogger();
     recordButton.addEventListener('click', startRecording);
     stopButton.addEventListener('click', stopRecording);
     saveButton.addEventListener('click', saveData);
