@@ -1,100 +1,115 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tentang VoiceGrader AI - Dokumentasi</title>
-    <link rel="stylesheet" href="style.css" /> 
-    <style>
-        /* Gaya khusus untuk halaman about */
-        .content-container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 30px;
-            background: var(--card-bg);
-            border-radius: 20px;
-            border: 1px solid var(--border-neon);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        .content-container h2 {
-            color: var(--neon-green);
-            font-size: 2rem;
-            text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 0 0 8px rgba(0, 255, 102, 0.7);
-        }
-        .content-container p, .content-container li {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-        }
-        .content-container strong {
-            color: var(--text-primary);
-        }
-        .feature-list {
-            list-style-type: none;
-            padding-left: 0;
-            margin-top: 20px;
-        }
-        .feature-list li::before {
-            content: "✨";
-            margin-right: 10px;
-        }
-        .team-info {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-        }
-        #backButton {
-            display: block;
-            width: 90%;
-            max-width: 300px;
-            margin: 30px auto 0;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-decoration: none;
-            border-radius: 50px;
-            background: rgba(60, 140, 255, 0.2);
-            color: #60a0ff;
-            border: 1px solid rgba(60, 140, 255, 0.5);
-            transition: all 0.3s;
-        }
-        #backButton:hover {
-            background: rgba(60, 140, 255, 0.3);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(60, 140, 255, 0.3);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tentang – Tobacco AI Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Override: use Inter for body text for better readability */
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    main {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      color: var(--ai-blue);
+      text-align: center;
+    }
+    h2 {
+      font-size: 1.4rem;
+      margin: 24px 0 12px;
+      color: var(--ai-lime);
+    }
+    p, li {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    ul {
+      padding-left: 20px;
+      margin: 16px 0;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 30px;
+      color: var(--ai-blue);
+      text-decoration: none;
+      font-weight: 500;
+      border: 1px solid var(--ai-blue);
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .back-link:hover {
+      background: rgba(0, 209, 255, 0.08);
+    }
+    footer {
+      position: relative;
+      bottom: auto;
+      border-top: none;
+      padding-top: 30px;
+    }
+  </style>
 </head>
 <body>
-    <div class="content-container">
-        <h2>ℹ️ Tentang VoiceGrader AI</h2>
-        <p><strong>VoiceGrader AI</strong> adalah sebuah Asisten Penilaian Otomatis yang dirancang untuk membantu guru dalam mencatat dan mengklasifikasikan komentar penilaian siswa secara *real-time* berbasis suara.</p>
+  <div id="neural-bg"></div>
 
-        <h3>💡 Konsep & Manfaat Utama</h3>
-        <p>Proyek ini mengatasi masalah pencatatan manual yang memakan waktu. Dengan VoiceGrader AI, guru cukup berbicara, dan sistem akan secara otomatis memisahkan komentar tersebut ke dalam tiga aspek penilaian: **Kognitif, Afektif,** dan **Psikomotorik** berdasarkan kata kunci yang terdeteksi.</p>
+  <header>
+    <h1>🌿 Tentang Platform</h1>
+    <p>Solusi AI untuk grading tembakau & logistik suara – presisi, cepat, berbasis lokal</p>
+  </header>
 
-        <h3>⚙️ Fitur Utama (MVP)</h3>
-        <ul class="feature-list">
-            <li><strong>Speech-to-Text Lokal:</strong> Menggunakan API browser untuk akurasi transkripsi cepat.</li>
-            <li><strong>Klasifikasi Otomatis:</strong> Memetakan kata kunci ke Kognitif (Pengetahuan), Afektif (Sikap), dan Psikomotorik (Keterampilan).</li>
-            <li><strong>Penyimpanan Data Lokal:</strong> Fitur Simpan & Muat data penilaian menggunakan `localStorage`.</li>
-            <li><strong>Indikator Visual:</strong> Tampilan tombol rekam yang beranimasi saat aktif.</li>
-        </ul>
+  <main>
+    <section>
+      <h2>🎯 Tujuan Platform</h2>
+      <p>
+        <strong>Tobacco AI Platform</strong> dirancang untuk membantu petani dan pengelola gudang tembakau di Kudus dalam menilai kualitas daun secara objektif menggunakan kecerdasan buatan, serta mencatat logistik panen melalui perintah suara dalam bahasa Indonesia.
+      </p>
+    </section>
 
-        <div class="team-info">
-            <h3>Tim & Pembuat</h3>
-            <p>Dibuat dan dikembangkan oleh: <strong>Rafa 🚀</strong></p>
-            <p><em>Proyek ini dibuat untuk Lomba Pengembangan Aplikasi TANOS 2025.</em></p>
-        </div>
+    <section>
+      <h2>🧠 Teknologi yang Digunakan</h2>
+      <ul>
+        <li><strong>Visual Grading</strong>: Model AI berbasis Teachable Machine (TensorFlow.js) yang mengklasifikasikan daun tembakau ke dalam Grade A, B, atau C berdasarkan visual langsung dari kamera.</li>
+        <li><strong>Voice Logger</strong>: Web Speech API untuk transkripsi suara real-time, dikategorikan otomatis ke dalam tiga domain: kualitas daun, logistik panen, dan tindak lanjut.</li>
+        <li><strong>Edge Processing</strong>: Semua pemrosesan berjalan di perangkat pengguna — tidak ada data yang dikirim ke server.</li>
+      </ul>
+    </section>
 
-        <a href="grader.html" id="backButton">⬅️ Kembali ke Aplikasi VoiceGrader</a>
-    </div>
-    <footer>
-        <p>© 2025 VoiceGrader AI | Dokumentasi Mini</p>
-    </footer>
+    <section>
+      <h2>⚠️ Persyaratan Penggunaan</h2>
+      <p>
+        Platform ini hanya berjalan optimal di:
+      </p>
+      <ul>
+        <li><strong>Browser</strong>: Google Chrome atau Safari (desktop)</li>
+        <li><strong>Perangkat</strong>: Laptop atau komputer dengan kamera dan mikrofon</li>
+        <li><strong>Model AI</strong>: Tidak kompatibel di sebagian besar browser mobile</li>
+      </ul>
+      <p>
+        Jika Anda melihat pesan error “Teachable Machine isn’t supported here”, silakan gunakan perangkat dan browser yang direkomendasikan.
+      </p>
+    </section>
+
+    <section>
+      <h2>🌍 Dampak Lokal</h2>
+      <p>
+        Dikembangkan dengan fokus pada kebutuhan spesifik petani tembakau di Kudus, Jawa Tengah — tempat kualitas daun sangat menentukan harga jual. Platform ini bertujuan mengurangi bias subjektif dalam grading dan mempercepat dokumentasi lapangan.
+      </p>
+    </section>
+
+    <a href="grader.html" class="back-link">← Kembali ke Platform</a>
+  </main>
+
+  <footer>
+    <p>© 2025 Tobacco AI Platform | Solusi Presisi untuk Pertanian Tembakau</p>
+  </footer>
 </body>
 </html>

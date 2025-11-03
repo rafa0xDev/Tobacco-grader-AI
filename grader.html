@@ -1,82 +1,48 @@
 <!DOCTYPE html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tobacco AI Platform - Visual & Voice Grading</title>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="style.css" />
-        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
-    </head>
-    <body>
-        <header>
-            <h1>🌿 Tobacco AI Platform</h1>
-            <p>Asisten Grading Visual & Voice Logger (Fokus Kudus)</p>
-            <a href="about.html" id="docLink">ℹ️ Tentang Platform</a>
-        </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tobacco AI Platform - Visual Grader</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>🌿 Tobacco AI Platform</h1>
+      <p>Asisten Grading Visual</p>
+      <a href="about.html" id="docLink">ℹ️ Tentang Platform</a>
+    </header>
 
-        <section id="controls">
-            <button id="recordButton">🎤 MULAI VOICE LOGGER</button>
-            <button id="stopButton" disabled>⏸ BERHENTI MEREKAM</button>
-            <button id="saveButton">💾 SIMPAN DATA</button>
-            <button id="loadButton">📂 MUAT DATA</button>
-        </section>
+    <section id="controls">
+      <button id="refreshButton">🔄 MUAT ULANG MODEL</button>
+    </section>
 
-        <div id="statusMessage">Siap mendengarkan & Memuat Kamera...</div>
-        
-        <main id="mainContent">
-            
-            <section id="visualGrader">
-                <h2>👀 Visual Grader (Kualitas Daun)</h2>
-                
-                <div id="cameraArea">
-                    <div id="webcam-container"></div>
-                    <div id="gradeResult">
-                        <h3>Grade Prediksi:</h3>
-                        <p id="predictionText">Memuat Model AI...</p>
-                        <div id="label-container"></div>
-                    </div>
-                </div>
-            </section>
-            
-            <section id="voiceLogger">
-                <h2>🎙️ Voice Logger (Catatan Logistik)</h2>
-                <div id="resultContainer">
-                    <div class="category-box">
-                        <h3>💡 KUALITAS DAUN</h3>
-                        <ul id="kualitas-daun-list">
-                            <li>— Belum ada catatan —</li>
-                        </ul>
-                    </div>
+    <div id="statusMessage">Memuat Kamera & Model AI...</div>
 
-                    <div class="category-box">
-                        <h3>📦 LOGISTIK & PANEN</h3>
-                        <ul id="logistik-panen-list">
-                            <li>— Belum ada catatan —</li>
-                        </ul>
-                    </div>
+    <main id="mainContent">
+      <section id="visualGrader">
+        <h2>👀 Visual Grader (Kualitas Daun)</h2>
+        <div id="cameraWrapper">
+          <div id="cameraArea">
+            <div id="webcam-container"></div>
+          </div>
+          <div id="gradeResult">
+            <h3>Grade Prediksi:</h3>
+            <p id="predictionText">Memuat Model AI...</p>
+            <p id="descriptionText">Menunggu hasil prediksi...</p>
+            <div id="label-container"></div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-                    <div class="category-box">
-                        <h3>🛠️ TINDAK LANJUT</h3>
-                        <ul id="tindak-lanjut-list">
-                            <li>— Belum ada catatan —</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
-            
-        </main>
-        
-        <section id="transcript">
-            <h2>📝 Transkrip Lengkap</h2>
-            <p id="resultText">Belum ada hasil rekaman.</p>
-        </section>
+    <footer>
+      <p>© 2025 Tobacco AI Platform | Dibuat oleh Moch Rafa Alief Rohan 🚀</p>
+    </footer>
 
-        <footer>
-            <p>© 2025 Tobacco AI Platform | Dibuat oleh [Nama Anda] 🚀</p>
-        </footer>
-
-        <script src="grader.js"></script>
-    </body>
+    <script src="grader.js"></script>
+  </body>
 </html>
