@@ -1,115 +1,63 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tentang – Tobacco AI Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tentang Tobacco AI Platform</title>
+  <link rel="stylesheet" href="../style.css">
   <style>
-    /* Override: use Inter for body text for better readability */
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-    }
     main {
       max-width: 800px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 20px;
-      color: var(--ai-blue);
-      text-align: center;
-    }
-    h2 {
-      font-size: 1.4rem;
-      margin: 24px 0 12px;
-      color: var(--ai-lime);
-    }
-    p, li {
+      margin: 60px auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 30px;
       color: var(--text-secondary);
-      line-height: 1.7;
-      margin-bottom: 16px;
+      line-height: 1.8;
     }
-    ul {
-      padding-left: 20px;
-      margin: 16px 0;
+    main h1 {
+      text-align: center;
+      color: var(--ai-blue);
+      margin-bottom: 20px;
     }
-    .back-link {
-      display: inline-block;
-      margin-top: 30px;
+    main a {
       color: var(--ai-blue);
       text-decoration: none;
-      font-weight: 500;
-      border: 1px solid var(--ai-blue);
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: background 0.2s;
     }
-    .back-link:hover {
-      background: rgba(0, 209, 255, 0.08);
-    }
-    footer {
-      position: relative;
-      bottom: auto;
-      border-top: none;
-      padding-top: 30px;
+    main a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div id="neural-bg"></div>
-
   <header>
-    <h1>🌿 Tentang Platform</h1>
-    <p>Solusi AI untuk grading tembakau & logistik suara – presisi, cepat, berbasis lokal</p>
+    <h1>Tentang Platform Tobacco AI</h1>
   </header>
 
   <main>
-    <section>
-      <h2>🎯 Tujuan Platform</h2>
-      <p>
-        <strong>Tobacco AI Platform</strong> dirancang untuk membantu petani dan pengelola gudang tembakau di Kudus dalam menilai kualitas daun secara objektif menggunakan kecerdasan buatan, serta mencatat logistik panen melalui perintah suara dalam bahasa Indonesia.
-      </p>
-    </section>
+    <p>
+      <strong>Tobacco Grader AI</strong> merupakan proyek kecerdasan buatan berbasis web 
+      yang dirancang untuk membantu menilai kualitas daun tembakau secara otomatis 
+      menggunakan pengenalan citra. Sistem ini berjalan langsung di browser dengan model 
+      yang dikembangkan melalui <em>Teachable Machine</em> dan diintegrasikan dengan TensorFlow.js.
+    </p>
 
-    <section>
-      <h2>🧠 Teknologi yang Digunakan</h2>
-      <ul>
-        <li><strong>Visual Grading</strong>: Model AI berbasis Teachable Machine (TensorFlow.js) yang mengklasifikasikan daun tembakau ke dalam Grade A, B, atau C berdasarkan visual langsung dari kamera.</li>
-        <li><strong>Voice Logger</strong>: Web Speech API untuk transkripsi suara real-time, dikategorikan otomatis ke dalam tiga domain: kualitas daun, logistik panen, dan tindak lanjut.</li>
-        <li><strong>Edge Processing</strong>: Semua pemrosesan berjalan di perangkat pengguna — tidak ada data yang dikirim ke server.</li>
-      </ul>
-    </section>
+    <p>
+      Tujuan utama proyek ini adalah memperkenalkan penerapan <strong>AI di bidang pertanian</strong> 
+      secara sederhana, cepat, dan ramah pengguna — terutama untuk edukasi dan riset awal.
+    </p>
 
-    <section>
-      <h2>⚠️ Persyaratan Penggunaan</h2>
-      <p>
-        Platform ini hanya berjalan optimal di:
-      </p>
-      <ul>
-        <li><strong>Browser</strong>: Google Chrome atau Safari (desktop)</li>
-        <li><strong>Perangkat</strong>: Laptop atau komputer dengan kamera dan mikrofon</li>
-        <li><strong>Model AI</strong>: Tidak kompatibel di sebagian besar browser mobile</li>
-      </ul>
-      <p>
-        Jika Anda melihat pesan error “Teachable Machine isn’t supported here”, silakan gunakan perangkat dan browser yang direkomendasikan.
-      </p>
-    </section>
-
-    <section>
-      <h2>🌍 Dampak Lokal</h2>
-      <p>
-        Dikembangkan dengan fokus pada kebutuhan spesifik petani tembakau di Kudus, Jawa Tengah — tempat kualitas daun sangat menentukan harga jual. Platform ini bertujuan mengurangi bias subjektif dalam grading dan mempercepat dokumentasi lapangan.
-      </p>
-    </section>
-
-    <a href="index.html" class="back-link">← Kembali ke Platform</a>
+    <p>
+      Dibuat oleh <strong>Moch Rafa Alief Rohan</strong> 🇮🇩  
+      <br>Versi: 1.0 — 2025  
+      <br>
+      <a href="../index.html">Kembali ke Halaman Utama</a>
+    </p>
   </main>
 
   <footer>
-    <p>© 2025 Tobacco AI Platform | Solusi Presisi untuk Pertanian Tembakau</p>
+    <p>© 2025 Tobacco AI Platform | Made with ❤️ by Rafa</p>
   </footer>
 </body>
 </html>

@@ -33,8 +33,7 @@ body {
   line-height: 1.6;
   padding-bottom: 80px;
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+  margin-bottom: 1rem;
 }
 
 /* === HEADER === */
@@ -54,7 +53,7 @@ header h1 {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: pulseGlow 3s ease-in-out infinite;
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 
 @keyframes pulseGlow {
@@ -101,7 +100,7 @@ header p {
   color: var(--ai-blue);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
