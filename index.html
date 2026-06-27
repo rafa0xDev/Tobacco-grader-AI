@@ -1,51 +1,267 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tobacco AI Platform - Visual Grader</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
-  </head>
-  <body>
-    <header>
-      <h1>🌿 Tobacco AI Platform</h1>
-      <p>Asisten Grading Visual</p>
-      <a href="about/about.html" id="docLink">Tentang Platform</a>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tobacco AI Grader</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+</head>
 
-    <section id="controls">
-      <button id="refreshButton">🔄 MUAT ULANG MODEL</button>
-    </section>
+<body>
+<main class="shell">
 
-    <div id="statusMessage">Memuat Kamera & Model AI...</div>
+  <!-- ==================== HEADER ==================== -->
+  <header class="header">
+    <div class="header-inner">
 
-    <main id="mainContent">
-      <section id="visualGrader">
-        <h2>👀 Visual Grader (Kualitas Daun)</h2>
-        <div id="cameraWrapper">
-          <h3 class="instruction">
-            Aktifkan kamera untuk mulai menilai kualitas daun tembakau secara otomatis
-          </h3>
-          <div id="cameraArea">
-            <div id="webcam-container"></div>
-          </div>
-          <div id="gradeResult">
-            <h3>Grade Prediksi:</h3>
-            <p id="predictionText">Memuat Model AI...</p>
-            <p id="descriptionText">Menunggu hasil prediksi...</p>
-            <div id="label-container"></div>
-          </div>
+      <div class="brand">
+        <span class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+          </svg>
+        </span>
+        <span class="brand-name">Tobacco AI Grader</span>
+      </div>
+
+      <nav class="nav-pills">
+        <button id="navGrader" type="button" class="nav-btn active" onclick="switchTab('grader')">Grader</button>
+        <button id="navTentang" type="button" class="nav-btn" onclick="switchTab('tentang')">Tentang</button>
+      </nav>
+
+      <div class="header-right">
+        <div class="status-pill">
+          <span id="statusDot" class="status-dot"></span>
+          <span id="statusShort">Mati</span>
         </div>
+        <button id="refreshButton" type="button" class="refresh-btn" aria-label="Segarkan kamera">
+          <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hidden TM compat -->
+  <div id="label-container" style="display:none" aria-hidden="true"></div>
+
+  <!-- ==================== CONTENT ==================== -->
+  <div class="content">
+
+    <!-- GRADER TAB -->
+    <div id="tabGrader" class="tab">
+      <div class="grid-2col">
+
+        <!-- LEFT -->
+        <div class="col">
+
+          <!-- Camera Card -->
+          <section class="card camera-card">
+            <div class="camera-card-top">
+              <h2 class="card-title">Kamera Live</h2>
+              <span class="camera-ratio-label">4:3</span>
+            </div>
+
+            <div id="webcam-container" class="viewport">
+              <div id="camPlaceholder" class="cam-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Memuat kamera...</span>
+              </div>
+              <span class="corner corner-tl"></span>
+              <span class="corner corner-tr"></span>
+              <span class="corner corner-bl"></span>
+              <span class="corner corner-br"></span>
+            </div>
+
+            <div class="pred-row">
+              <div class="pred-box">
+                <span class="pred-label">Grade Prediksi</span>
+                <span id="predictionText" class="pred-value">—</span>
+              </div>
+              <div class="pred-box">
+                <span class="pred-label">Keyakinan</span>
+                <span id="confValue" class="pred-value" style="color:#111827">—</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Probability Card -->
+          <section class="card prob-card">
+            <h2 class="card-title">Distribusi Probabilitas</h2>
+            <div class="prob-rows">
+              <div class="prob-row">
+                <span class="prob-name">Grade A</span>
+                <div class="prob-track"><div id="barA" class="prob-fill" style="background:#16a34a"></div></div>
+                <span id="pctA" class="prob-pct">0.0%</span>
+              </div>
+              <div class="prob-row">
+                <span class="prob-name">Grade B</span>
+                <div class="prob-track"><div id="barB" class="prob-fill" style="background:#f59e0b"></div></div>
+                <span id="pctB" class="prob-pct">0.0%</span>
+              </div>
+              <div class="prob-row">
+                <span class="prob-name">Grade C</span>
+                <div class="prob-track"><div id="barC" class="prob-fill" style="background:#dc2626"></div></div>
+                <span id="pctC" class="prob-pct">0.0%</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Analysis Card -->
+          <section class="card">
+            <h2 class="card-title">Analisis Visual</h2>
+            <p id="descriptionText" class="analysis-text">
+              Arahkan daun tembakau ke kamera untuk memulai analisis kualitas secara otomatis.
+            </p>
+            <div class="status-box">
+              <p id="statusMessage" class="status-mono">status: idle — menunggu kamera</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="col">
+
+          <!-- Stats Card -->
+          <section class="card stats-card">
+            <h2 class="card-title">Statistik Sesi</h2>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span id="countA" class="stat-num" style="color:#16a34a">0</span>
+                <span class="stat-label">Grade A</span>
+              </div>
+              <div class="stat-box">
+                <span id="countB" class="stat-num" style="color:#f59e0b">0</span>
+                <span class="stat-label">Grade B</span>
+              </div>
+              <div class="stat-box">
+                <span id="countC" class="stat-num" style="color:#dc2626">0</span>
+                <span class="stat-label">Grade C</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Distribution Card -->
+          <section class="card dist-card">
+            <h2 class="card-title">Distribusi Grade</h2>
+            <div class="dist-bar">
+              <div id="distA" class="dist-seg" style="background:#16a34a"></div>
+              <div id="distB" class="dist-seg" style="background:#f59e0b"></div>
+              <div id="distC" class="dist-seg" style="background:#dc2626"></div>
+            </div>
+            <div class="dist-legend">
+              <div class="dist-legend-item">
+                <span class="dist-dot" style="background:#16a34a"></span>
+                <span id="distPctA" class="dist-pct">0%</span>
+              </div>
+              <div class="dist-legend-item">
+                <span class="dist-dot" style="background:#f59e0b"></span>
+                <span id="distPctB" class="dist-pct">0%</span>
+              </div>
+              <div class="dist-legend-item">
+                <span class="dist-dot" style="background:#dc2626"></span>
+                <span id="distPctC" class="dist-pct">0%</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Legend Card -->
+          <section class="card">
+            <h2 class="card-title">Keterangan</h2>
+            <div class="legend-rows">
+              <div class="legend-row">
+                <span class="legend-badge" style="color:#16a34a;background:rgba(22,163,74,0.1)">A</span>
+                <div>
+                  <p class="legend-title">Premium</p>
+                  <p class="legend-desc">Daun tembakau mulus, warna merata, tekstur optimal untuk kualitas ekspor.</p>
+                </div>
+              </div>
+              <div class="legend-row">
+                <span class="legend-badge" style="color:#f59e0b;background:rgba(245,158,11,0.1)">B</span>
+                <div>
+                  <p class="legend-title">Menengah</p>
+                  <p class="legend-desc">Daun cukup baik dengan sedikit bercak atau warna kurang merata.</p>
+                </div>
+              </div>
+              <div class="legend-row">
+                <span class="legend-badge" style="color:#dc2626;background:rgba(220,38,38,0.1)">C</span>
+                <div>
+                  <p class="legend-title">Rendah</p>
+                  <p class="legend-desc">Daun memiliki kerusakan, noda, atau warna tidak konsisten.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Log Card -->
+          <section class="card">
+            <h2 class="card-title">Log Sistem</h2>
+            <ul id="logList" class="log-list">
+              <li class="log-empty">Belum ada aktivitas.</li>
+            </ul>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- TENTANG TAB -->
+    <div id="tabTentang" class="tab hidden">
+      <section class="card">
+        <h2 class="card-title" style="font-size:16px">Tentang Aplikasi</h2>
+        <p class="about-desc">
+          Tobacco AI Grader adalah dasbor penilaian kualitas daun tembakau berbasis kecerdasan buatan.
+          Aplikasi ini mengklasifikasikan daun ke dalam tiga grade — Premium (A), Menengah (B), dan Rendah (C) —
+          secara langsung melalui kamera perangkat menggunakan model Teachable Machine dan TensorFlow.js
+          yang berjalan sepenuhnya di browser tanpa server.
+        </p>
       </section>
-    </main>
 
-    <footer>
-      <p>© 2025 Tobacco AI Platform | Dibuat oleh Moch Rafa Alief Rohan 🚀</p>
-    </footer>
+      <div class="features-grid">
+        <section class="card">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </span>
+          <h3 class="feature-title">Pemindaian Real-time</h3>
+          <p class="feature-desc">Analisis daun tembakau langsung dari kamera tanpa perlu unggah gambar.</p>
+        </section>
+        <section class="card">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="14" x2="22" y2="14"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="14" x2="4" y2="14"/></svg>
+          </span>
+          <h3 class="feature-title">Model AI Terlatih</h3>
+          <p class="feature-desc">Klasifikasi grade menggunakan model Teachable Machine untuk akurasi tinggi.</p>
+        </section>
+        <section class="card">
+          <span class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+          <h3 class="feature-title">Penilaian Visual</h3>
+          <p class="feature-desc">Menilai warna, tekstur, dan kondisi daun untuk menentukan grade kualitas.</p>
+        </section>
+      </div>
+    </div>
 
-    <script src="grader.js"></script>
-  </body>
+  </div>
+</main>
+
+<script>
+  function switchTab(tab) {
+    const isGrader = tab === 'grader'
+    document.getElementById('tabGrader').classList.toggle('hidden', !isGrader)
+    document.getElementById('tabTentang').classList.toggle('hidden', isGrader)
+    document.getElementById('navGrader').className = 'nav-btn' + (isGrader ? ' active' : '')
+    document.getElementById('navTentang').className = 'nav-btn' + (!isGrader ? ' active' : '')
+  }
+</script>
+<script src="grader.js"></script>
+</body>
 </html>
