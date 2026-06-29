@@ -14,7 +14,7 @@ A real-time tobacco leaf quality grading dashboard that runs entirely in the bro
 
 ## Preview
 
-| Grader Dashboard | About |
+| Grader Dashboard | Tentang |
 |---|---|
 | Camera + grade prediction, probability bars, session stats, log | App description and feature overview |
 
