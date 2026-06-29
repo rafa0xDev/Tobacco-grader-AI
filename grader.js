@@ -214,7 +214,8 @@ async function initVisualGrader() {
     setStatus("status: kamera aktif — model siap", "Live", true);
     addLog(`Prediksi berjalan. Mode: ${gotRearCam ? "kamera belakang" : "kamera depan/desktop"}`);
 
-    window.requestAnimationFrame(loop);
+    requestAnimationFrame(renderLoop);
+    startPredictLoop();
     setInterval(checkCameraStatus, 3000);
 
   } catch (err) {
@@ -227,13 +228,23 @@ async function initVisualGrader() {
 }
 
 // ====================================================================================
-// 2. LOOP
+// 2. LOOPS — dipisah supaya kamera smooth 60fps
+// renderLoop  : hanya draw frame ke canvas, tidak blocking
+// predictLoop : inference TM tiap 300ms, pakai flag supaya tidak tumpuk
 // ====================================================================================
-async function loop() {
+function renderLoop() {
   if (!visualActive || !webcam) return;
   webcam.update();
-  await predict();
-  window.requestAnimationFrame(loop);
+  requestAnimationFrame(renderLoop);
+}
+
+let isPredicting = false;
+function startPredictLoop() {
+  setInterval(async () => {
+    if (!visualActive || !webcam || isPredicting) return;
+    isPredicting = true;
+    try { await predict(); } finally { isPredicting = false; }
+  }, 300);
 }
 
 // ====================================================================================
@@ -296,7 +307,7 @@ function checkCameraStatus() {
       visualActive = true;
       setStatus("status: kamera aktif kembali", "Live", true);
       addLog("Kamera tersambung kembali.");
-      window.requestAnimationFrame(loop);
+      requestAnimationFrame(renderLoop);
     }
   } catch (_) { visualActive = false; }
 }
